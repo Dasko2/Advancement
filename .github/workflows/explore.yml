@@ -1,0 +1,47 @@
+name: Explore
+on:
+  push:
+    branches: [explore]
+jobs:
+  explore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 9.2.1
+      - name: Build (ignore failure)
+        run: gradle compileJava --no-daemon > build.log 2>&1 || true
+      - name: Inspect
+        run: |
+          rm -f /tmp/out.txt
+          tail -c 1500 build.log >> /tmp/out.txt
+          for j in $(find ~/.gradle -name "*.jar" -size +5M); do
+            if unzip -l "$j" 2>/dev/null | grep -q "gui/screens/advancements/AdvancementWidget.class"; then
+              echo "JAR: $j" >> /tmp/out.txt
+              for c in client.gui.screens.advancements.AdvancementsScreen client.gui.screens.advancements.AdvancementTab client.gui.screens.advancements.AdvancementWidget; do
+                echo "--- $c" >> /tmp/out.txt
+                javap -p -cp "$j" net.minecraft.$c 2>&1 | grep -v -E "lambda|static final|^Compiled|private final|private static|private int|private double|private float|private boolean" >> /tmp/out.txt
+              done
+              echo "--- fields" >> /tmp/out.txt
+              javap -p -cp "$j" net.minecraft.client.gui.screens.advancements.AdvancementWidget net.minecraft.client.gui.screens.advancements.AdvancementTab 2>&1 | grep -E "advancementNode|AdvancementProgress progress|display;|hovered" >> /tmp/out.txt
+              echo "--- gfx" >> /tmp/out.txt
+              unzip -l "$j" | grep -E "client/gui/GuiGraphics[A-Za-z]*.class|input/KeyEvent.class|input/MouseButtonEvent.class" >> /tmp/out.txt
+              for g in GuiGraphicsExtractor GuiGraphics; do
+                javap -p -cp "$j" net.minecraft.client.gui.$g 2>&1 | grep -E " fill\(| text\(| outline\(|guiWidth|guiHeight|nextStratum|drawString|renderOutline" | head -12 >> /tmp/out.txt
+              done
+              javap -p -cp "$j" net.minecraft.client.gui.Font 2>&1 | grep -E "plainSubstrByWidth|lineHeight" >> /tmp/out.txt
+              javap -p -cp "$j" net.minecraft.client.resources.language.I18n 2>&1 | grep exists >> /tmp/out.txt
+              break
+            fi
+          done
+          split -b 6000 -d /tmp/out.txt /tmp/part_
+          for p in /tmp/part_*; do
+            n=$(basename $p)
+            msg=$(cat "$p" | sed ':a;N;$!ba;s/%/%25/g;s/\r/%0D/g;s/\n/%0A/g')
+            echo "::notice title=$n::${msg}"
+          done

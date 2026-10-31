@@ -17,7 +17,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 25
 
       - uses: gradle/actions/setup-gradle@v4
         with:
@@ -47,7 +47,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.${{ github.run_number }}
-          name: Advancement 1.0.${{ github.run_number }} (Minecraft 1.21.11)
+          name: Advancement 1.0.${{ github.run_number }} (Minecraft 26.3)
           target_commitish: ${{ github.sha }}
           files: |
             build/libs/*.jar
