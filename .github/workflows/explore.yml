@@ -13,14 +13,14 @@ jobs:
           java-version: 25
       - uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: 9.2.1
+          gradle-version: 9.7.0
       - name: Build (ignore failure)
         run: gradle compileJava --no-daemon > build.log 2>&1 || true
       - name: Inspect
         run: |
           rm -f /tmp/out.txt
           tail -c 1500 build.log >> /tmp/out.txt
-          for j in $(find ~/.gradle -name "*.jar" -size +5M); do
+          for j in $(find ~/.gradle -name "*.jar" -size +5M | grep -v 1.21.11); do
             if unzip -l "$j" 2>/dev/null | grep -q "gui/screens/advancements/AdvancementWidget.class"; then
               echo "JAR: $j" >> /tmp/out.txt
               for c in client.gui.screens.advancements.AdvancementsScreen client.gui.screens.advancements.AdvancementTab client.gui.screens.advancements.AdvancementWidget; do
