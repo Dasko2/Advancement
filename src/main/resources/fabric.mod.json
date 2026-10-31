@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "advancement",
+  "version": "${version}",
+  "name": "Advancement",
+  "description": "Dans le menu des succès, clique sur un succès avec une progression (ex. 1 / 42) pour voir ce qu'il te manque. 100 % client, compatible Paper.",
+  "authors": ["Dasko2"],
+  "license": "MIT",
+  "environment": "client",
+  "mixins": [
+    {
+      "config": "advancement.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=0.18.6",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
