@@ -5,14 +5,13 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
-import fr.advancement.mixin.AdvancementWidgetAccessor;
 import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.AdvancementNode;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.advancements.AdvancementWidget;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
@@ -24,8 +23,17 @@ public final class MissingPopup {
     private static int total;
     private static List<Component> entries = List.of();
     private static boolean open;
+    private static AdvancementWidget hovered;
 
     private MissingPopup() {
+    }
+
+    public static AdvancementWidget getHovered() {
+        return hovered;
+    }
+
+    public static void setHovered(AdvancementWidget widget) {
+        hovered = widget;
     }
 
     public static boolean isOpen() {
@@ -40,9 +48,9 @@ public final class MissingPopup {
 
     /** Ouvre la fenêtre pour ce succès. Renvoie false s'il n'y a rien à afficher (pas de progression). */
     public static boolean openFor(AdvancementWidget widget) {
-        AdvancementWidgetAccessor accessor = (AdvancementWidgetAccessor) widget;
-        AdvancementNode node = accessor.advancement$getNode();
-        AdvancementProgress progress = accessor.advancement$getProgress();
+        AdvancementWidgetData data = (AdvancementWidgetData) (Object) widget;
+        AdvancementNode node = data.advancement$getNode();
+        AdvancementProgress progress = data.advancement$getProgress();
         if (node == null || progress == null) return false;
 
         List<String> remaining = new ArrayList<>();
@@ -53,7 +61,7 @@ public final class MissingPopup {
         int all = remaining.size() + done;
         if (all <= 1 || remaining.isEmpty()) return false;
 
-        DisplayInfo display = node.advancement().display().orElse(null);
+        DisplayInfo display = data.advancement$getDisplay();
         title = display != null ? display.getTitle() : Component.literal(node.holder().id().toString());
         missing = remaining.size();
         total = all;
@@ -98,7 +106,7 @@ public final class MissingPopup {
         return out.toString();
     }
 
-    public static void render(GuiGraphicsExtractor g) {
+    public static void render(GuiGraphics g) {
         Font font = Minecraft.getInstance().font;
         int screenW = g.guiWidth();
         int screenH = g.guiHeight();
@@ -132,27 +140,27 @@ public final class MissingPopup {
         g.nextStratum();
         g.fill(0, 0, screenW, screenH, 0x90000000);
         g.fill(x, y, x + w, y + h, 0xF0100010);
-        g.outline(x, y, w, h, 0xFFC8A000);
+        g.renderOutline(x, y, w, h, 0xFFC8A000);
 
         int cy = y + pad;
-        g.text(font, head, x + (w - font.width(head)) / 2, cy, 0xFFFFFFFF, true);
+        g.drawString(font, head, x + (w - font.width(head)) / 2, cy, 0xFFFFFFFF, true);
         cy += lineH;
-        g.text(font, sub, x + (w - font.width(sub)) / 2, cy, 0xFFFFFFFF, true);
+        g.drawString(font, sub, x + (w - font.width(sub)) / 2, cy, 0xFFFFFFFF, true);
         cy += lineH + 4;
 
         for (int i = 0; i < shown; i++) {
             int col = i / rows;
             int row = i % rows;
             Component line = Component.literal("• ").withStyle(ChatFormatting.RED).append(entries.get(i));
-            g.text(font, line, x + pad + col * entryW, cy + row * lineH, 0xFFFFFFFF, true);
+            g.drawString(font, line, x + pad + col * entryW, cy + row * lineH, 0xFFFFFFFF, true);
         }
         if (shown < n) {
             int i = shown;
             Component more = Component.literal("… +" + (n - shown)).withStyle(ChatFormatting.GRAY);
-            g.text(font, more, x + pad + (i / rows) * entryW, cy + (i % rows) * lineH, 0xFFFFFFFF, true);
+            g.drawString(font, more, x + pad + (i / rows) * entryW, cy + (i % rows) * lineH, 0xFFFFFFFF, true);
         }
 
         cy += rows * lineH + 4;
-        g.text(font, foot, x + (w - font.width(foot)) / 2, cy, 0xFFFFFFFF, true);
+        g.drawString(font, foot, x + (w - font.width(foot)) / 2, cy, 0xFFFFFFFF, true);
     }
 }
