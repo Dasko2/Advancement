@@ -49,9 +49,19 @@ public abstract class AdvancementsScreenMixin {
     @Inject(method = "renderTooltips", at = @At("HEAD"), cancellable = true)
     private void advancement$hideTooltips(GuiGraphics graphics, int mouseX, int mouseY, int x, int y,
             CallbackInfo ci) {
+        MissingPopup.setWindow(x, y);
         if (MissingPopup.isOpen()) {
             MissingPopup.setHovered(null);
             ci.cancel();
+        }
+    }
+
+    @Inject(method = "mouseScrolled", at = @At("HEAD"), cancellable = true)
+    private void advancement$onScroll(double mouseX, double mouseY, double scrollX, double scrollY,
+            CallbackInfoReturnable<Boolean> cir) {
+        if (MissingPopup.isOpen()) {
+            MissingPopup.scroll(scrollY > 0 ? -1 : 1);
+            cir.setReturnValue(true);
         }
     }
 
