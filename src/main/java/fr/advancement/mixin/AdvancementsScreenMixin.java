@@ -22,6 +22,8 @@ public abstract class AdvancementsScreenMixin {
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
     private void advancement$onClick(MouseButtonEvent event, boolean doubleClick,
             CallbackInfoReturnable<Boolean> cir) {
+        MissingPopup.LOGGER.info("[Advancement] clic reçu : bouton={}, fenêtre ouverte={}", event.button(),
+                MissingPopup.isOpen());
         // Fenêtre déjà ouverte : un clic la ferme
         if (MissingPopup.isOpen()) {
             MissingPopup.close();
