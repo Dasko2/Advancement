@@ -10,7 +10,7 @@ Mod Fabric pour Minecraft **26.3** : dans le **menu des succès de base**, cliqu
 ## Installation
 
 1. Installer [Fabric Loader](https://fabricmc.net/use/) 0.20.1+ pour Minecraft 26.3 et [Fabric API](https://modrinth.com/mod/fabric-api).
-2. Mettre `advancement-1.0.0.jar` dans le dossier `mods` du **client** (Java 25 requis).
+2. Mettre `advancement-1.1.0.jar` dans le dossier `mods` du **client** (Java 25 requis).
 
 ## Compiler
 
