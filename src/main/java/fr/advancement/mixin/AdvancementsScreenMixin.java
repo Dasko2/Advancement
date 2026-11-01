@@ -1,6 +1,5 @@
 package fr.advancement.mixin;
 
-import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -8,7 +7,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import fr.advancement.MissingPopup;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.advancements.AdvancementWidget;
 import net.minecraft.client.gui.screens.advancements.AdvancementsScreen;
 import net.minecraft.client.input.KeyEvent;
@@ -39,17 +38,15 @@ public abstract class AdvancementsScreenMixin {
 
     @Inject(method = "keyPressed", at = @At("HEAD"), cancellable = true)
     private void advancement$onKey(KeyEvent event, CallbackInfoReturnable<Boolean> cir) {
-        if (MissingPopup.isOpen() && event.key() == GLFW.GLFW_KEY_ESCAPE) {
+        if (MissingPopup.isOpen() && event.key() == 256) {
             MissingPopup.close();
             cir.setReturnValue(true);
         }
     }
 
     // Pendant que la fenêtre est ouverte, on masque l'infobulle normale des succès
-    @Inject(method = "renderTooltips", at = @At("HEAD"), cancellable = true)
-    private void advancement$hideTooltips(GuiGraphics graphics, int mouseX, int mouseY, int x, int y,
-            CallbackInfo ci) {
-        MissingPopup.setWindow(x, y);
+    @Inject(method = "extractTooltips", at = @At("HEAD"), cancellable = true)
+    private void advancement$hideTooltips(GuiGraphicsExtractor graphics, int mouseX, int mouseY, CallbackInfo ci) {
         if (MissingPopup.isOpen()) {
             MissingPopup.setHovered(null);
             ci.cancel();
@@ -65,8 +62,8 @@ public abstract class AdvancementsScreenMixin {
         }
     }
 
-    @Inject(method = "render", at = @At("TAIL"))
-    private void advancement$drawPopup(GuiGraphics graphics, int mouseX, int mouseY, float partialTick,
+    @Inject(method = "extractRenderState", at = @At("TAIL"))
+    private void advancement$drawPopup(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick,
             CallbackInfo ci) {
         if (MissingPopup.isOpen()) MissingPopup.render(graphics);
     }

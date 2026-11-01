@@ -4,14 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import net.minecraft.advancements.AdvancementNode;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.advancements.AdvancementWidget;
-import net.minecraft.client.resources.language.I18n;
+import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 
 /** Fenêtre qui liste ce qu'il manque pour terminer un succès à progression. */
@@ -22,8 +21,6 @@ public final class MissingPopup {
     private static List<String> entries = List.of();
     private static boolean open;
     private static AdvancementWidget hovered;
-    private static int winX = Integer.MIN_VALUE;
-    private static int winY;
     private static int scroll;
     private static int maxScroll;
 
@@ -57,9 +54,8 @@ public final class MissingPopup {
     /** Ouvre la fenêtre pour ce succès. Renvoie false s'il n'y a rien à afficher (pas de progression). */
     public static boolean openFor(AdvancementWidget widget) {
         AdvancementWidgetData data = (AdvancementWidgetData) (Object) widget;
-        AdvancementNode node = data.advancement$getNode();
         AdvancementProgress progress = data.advancement$getProgress();
-        if (node == null || progress == null) return false;
+        if (progress == null) return false;
 
         List<String> remaining = new ArrayList<>();
         for (String key : progress.getRemainingCriteria()) remaining.add(key);
@@ -69,8 +65,8 @@ public final class MissingPopup {
         int all = remaining.size() + done;
         if (all <= 1 || remaining.isEmpty()) return false;
 
-        DisplayInfo display = data.advancement$getDisplay();
-        title = display != null ? display.getTitle() : Component.literal(node.holder().id().toString());
+        DisplayInfo display = widget.getDisplay();
+        title = display != null ? display.title() : Component.literal(widget.getAdvancement().id().toString());
         missing = remaining.size();
         total = all;
 
@@ -95,7 +91,7 @@ public final class MissingPopup {
         String dotted = path.replace('/', '.');
         for (String prefix : new String[] { "biome", "entity", "item", "block", "effect" }) {
             String translationKey = prefix + "." + namespace + "." + dotted;
-            if (I18n.exists(translationKey)) return Component.translatable(translationKey);
+            if (Language.getInstance().has(translationKey)) return Component.translatable(translationKey);
         }
         return Component.literal(prettify(path));
     }
@@ -115,25 +111,15 @@ public final class MissingPopup {
         return out.toString();
     }
 
-    /** Position de la fenêtre des succès à l'écran (retenue à chaque image par le mixin). */
-    public static void setWindow(int x, int y) {
-        winX = x;
-        winY = y;
-    }
-
     public static void scroll(int direction) {
         scroll = Math.max(0, Math.min(maxScroll, scroll + direction));
     }
 
     /** Dessine la liste dans la zone intérieure de la vraie fenêtre des succès, avec le style des infobulles de Minecraft. */
-    public static void render(GuiGraphics g) {
+    public static void render(GuiGraphicsExtractor g) {
         Font font = Minecraft.getInstance().font;
-        int wx = winX;
-        int wy = winY;
-        if (wx == Integer.MIN_VALUE) {
-            wx = (g.guiWidth() - 252) / 2;
-            wy = (g.guiHeight() - 140) / 2;
-        }
+        int wx = (g.guiWidth() - 252) / 2;
+        int wy = (g.guiHeight() - 140) / 2;
         int x = wx + INSIDE_X;
         int y = wy + INSIDE_Y;
         int pad = 6;
@@ -150,12 +136,12 @@ public final class MissingPopup {
 
         g.nextStratum();
         g.fill(x, y, x + INSIDE_W, y + INSIDE_H, 0xF0100010);
-        g.renderOutline(x, y, INSIDE_W, INSIDE_H, 0xA05000FF);
+        g.outline(x, y, INSIDE_W, INSIDE_H, 0xA05000FF);
 
         // En-tête : nom du succès et ce qu'il reste
-        g.drawString(font, font.plainSubstrByWidth(title.getString(), INSIDE_W - pad * 2), x + pad, y + 6, 0xFFFFFFFF, true);
+        g.text(font, font.plainSubstrByWidth(title.getString(), INSIDE_W - pad * 2), x + pad, y + 6, 0xFFFFFFFF, true);
         Component sub = Component.translatable("advancement.popup.missing", missing, total);
-        g.drawString(font, sub, x + pad, y + 18, 0xFFAAAAAA, true);
+        g.text(font, sub, x + pad, y + 18, 0xFFAAAAAA, true);
         g.fill(x + pad, y + 29, x + INSIDE_W - pad, y + 30, 0x40FFFFFF);
 
         // Liste des éléments manquants
@@ -166,8 +152,8 @@ public final class MissingPopup {
                 if (index >= n) break;
                 int ex = x + pad + col * colW;
                 int ey = listTop + row * lineH;
-                g.drawString(font, "• ", ex, ey, 0xFFAAAAAA, true);
-                g.drawString(font, font.plainSubstrByWidth(entries.get(index), colW - bulletW - 4), ex + bulletW, ey,
+                g.text(font, "• ", ex, ey, 0xFFAAAAAA, true);
+                g.text(font, font.plainSubstrByWidth(entries.get(index), colW - bulletW - 4), ex + bulletW, ey,
                         0xFFFFFFFF, true);
             }
         }
@@ -183,6 +169,6 @@ public final class MissingPopup {
         }
 
         Component foot = Component.translatable("advancement.popup.close");
-        g.drawString(font, foot, x + pad, y + INSIDE_H - 12, 0xFF777777, true);
+        g.text(font, foot, x + pad, y + INSIDE_H - 12, 0xFF777777, true);
     }
 }
