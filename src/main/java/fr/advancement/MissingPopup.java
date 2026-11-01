@@ -15,6 +15,8 @@ import net.minecraft.network.chat.Component;
 
 /** Fenêtre qui liste ce qu'il manque pour terminer un succès à progression. */
 public final class MissingPopup {
+    public static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger("advancement");
+
     private static Component title;
     private static int missing;
     private static int total;
@@ -55,7 +57,10 @@ public final class MissingPopup {
     public static boolean openFor(AdvancementWidget widget) {
         AdvancementWidgetData data = (AdvancementWidgetData) (Object) widget;
         AdvancementProgress progress = data.advancement$getProgress();
-        if (progress == null) return false;
+        if (progress == null) {
+            LOGGER.info("[Advancement] pas de progression pour ce succès");
+            return false;
+        }
 
         List<String> remaining = new ArrayList<>();
         for (String key : progress.getRemainingCriteria()) remaining.add(key);
@@ -63,6 +68,7 @@ public final class MissingPopup {
         for (String ignored : progress.getCompletedCriteria()) done++;
 
         int all = remaining.size() + done;
+        LOGGER.info("[Advancement] critères : {} faits, {} manquants", done, remaining.size());
         if (all <= 1 || remaining.isEmpty()) return false;
 
         DisplayInfo display = widget.getDisplay();

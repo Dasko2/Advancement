@@ -31,6 +31,7 @@ public abstract class AdvancementsScreenMixin {
         if (event.button() != 0) return;
 
         AdvancementWidget hovered = MissingPopup.getHovered();
+        MissingPopup.LOGGER.info("[Advancement] clic gauche, succès survolé : {}", hovered);
         if (hovered != null && MissingPopup.openFor(hovered)) {
             cir.setReturnValue(true);
         }
