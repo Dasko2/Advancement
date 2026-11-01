@@ -19,31 +19,16 @@ jobs:
       - name: Inspect
         run: |
           set +e
-          rm -f /tmp/out.txt
-          tail -c 1500 build.log >> /tmp/out.txt
-          find ~/.gradle -name "*.jar" -size +5M | grep -i minecraft >> /tmp/out.txt
-          for j in $(find ~/.gradle ~/.cache -name "*.jar" 2>/dev/null | grep -v 1.21.11); do
-            if unzip -l "$j" 2>/dev/null | grep -q "gui/screens/advancements/AdvancementWidget.class"; then
-              echo "JAR: $j" >> /tmp/out.txt
-              for c in client.gui.screens.advancements.AdvancementsScreen client.gui.screens.advancements.AdvancementTab client.gui.screens.advancements.AdvancementWidget; do
-                echo "--- $c" >> /tmp/out.txt
-                javap -p -cp "$j" net.minecraft.$c 2>&1 | grep -v -E "lambda|static final|^Compiled|private final|private static|private int|private double|private float|private boolean" >> /tmp/out.txt
-              done
-              echo "--- fields" >> /tmp/out.txt
-              javap -p -cp "$j" net.minecraft.client.gui.screens.advancements.AdvancementWidget net.minecraft.client.gui.screens.advancements.AdvancementTab 2>&1 | grep -E "advancementNode|AdvancementProgress progress|display;|hovered" >> /tmp/out.txt
-              echo "--- gfx" >> /tmp/out.txt
-              unzip -l "$j" | grep -E "client/gui/GuiGraphics[A-Za-z]*.class|input/KeyEvent.class|input/MouseButtonEvent.class" >> /tmp/out.txt
-              for g in GuiGraphicsExtractor GuiGraphics; do
-                javap -p -cp "$j" net.minecraft.client.gui.$g 2>&1 | grep -E " fill\(| text\(| outline\(|guiWidth|guiHeight|nextStratum|drawString|renderOutline" | head -12 >> /tmp/out.txt
-              done
-              javap -p -cp "$j" net.minecraft.client.gui.Font 2>&1 | grep -E "plainSubstrByWidth|lineHeight" >> /tmp/out.txt
-              javap -p -cp "$j" net.minecraft.client.resources.language.I18n 2>&1 | grep exists >> /tmp/out.txt
-              break
-            fi
-          done
-          split -b 6000 -d /tmp/out.txt /tmp/part_
-          for p in /tmp/part_*; do
-            n=$(basename $p)
-            msg=$(cat "$p" | sed ':a;N;$!ba;s/%/%25/g;s/\r/%0D/g;s/\n/%0A/g')
-            echo "::notice title=$n::${msg}"
-          done
+          j=/home/runner/.gradle/caches/fabric-loom/26.3/minecraft-merged.jar
+          note() { msg=$(sed ':a;N;$!ba;s/%/%25/g;s/\r/%0D/g;s/\n/%0A/g'); echo "::notice title=$1::${msg}"; }
+          javap -p -cp $j net.minecraft.client.gui.screens.advancements.AdvancementTab | grep -v -E "lambda|static final" | note A_tab
+          javap -p -cp $j net.minecraft.advancements.DisplayInfo | grep -v -E "lambda|static final|Codec" | note B_display
+          javap -p -cp $j net.minecraft.client.resources.language.I18n net.minecraft.locale.Language | grep -v lambda | note C_i18n
+          javap -p -cp $j net.minecraft.client.gui.Font | grep -E "plainSubstrByWidth|lineHeight|width\(" | note D_font
+          javap -p -cp $j net.minecraft.client.gui.GuiGraphicsExtractor | grep -E "outline|text\(|fill\(int|guiWidth|guiHeight|nextStratum" | note E_gfx
+          javap -p -cp $j net.minecraft.client.input.KeyEvent | grep -E "key|record" | note F_key
+          unzip -l $j | grep -E "com/mojang/blaze3d/platform/InputConstants.class|org/lwjgl/glfw" | head -3 | note G_input
+          javap -p -cp $j net.minecraft.client.gui.screens.advancements.AdvancementsScreen | grep -E "extract|render|mouse|key" | note H_screen
+          javap -p -cp $j net.minecraft.client.gui.screens.advancements.AdvancementTab | grep -E "hovered|widgets" | note I_fields
+          javap -p -c -cp $j net.minecraft.client.gui.screens.advancements.AdvancementTab | grep -A70 "void extractTooltips" | grep -E "extractHover|hovered|void extractTooltips" | note J_code
+          grep -E "error:|symbol:" build.log | head -30 | note K_errors
