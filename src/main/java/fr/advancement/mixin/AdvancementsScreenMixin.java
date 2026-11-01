@@ -30,7 +30,8 @@ public abstract class AdvancementsScreenMixin {
             cir.setReturnValue(true);
             return;
         }
-        if (event.button() != 0) return;
+        // Clic gauche ou droit (certains réglages de souris inversent les deux)
+        if (event.button() != 0 && event.button() != 1) return;
 
         AdvancementWidget hovered = MissingPopup.getHovered();
         MissingPopup.LOGGER.info("[Advancement] clic gauche, succès survolé : {}", hovered);

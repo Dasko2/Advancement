@@ -40,7 +40,6 @@ public final class MissingPopup {
     }
 
     public static void setHovered(AdvancementWidget widget) {
-        if (widget != null && widget != hovered) LOGGER.info("[Advancement] succès survolé : {}", widget);
         hovered = widget;
     }
 

@@ -1,6 +1,6 @@
 # Advancement
 
-Mod Fabric pour Minecraft **26.3** : dans le **menu des succès de base**, clique sur un succès qui a une progression (par exemple « Une aventure, la belle vie » à `1 / 42`) et la liste de **ce qu'il te manque** s'affiche dans la fenêtre des succès, avec le style de Minecraft.
+Mod Fabric pour Minecraft **26.3** : dans le **menu des succès de base**, clique sur un succès qui a une progression (par exemple « Heure de l'aventure » à `1 / 42`) et la liste de **ce qu'il te manque** s'affiche dans la fenêtre des succès, avec le style de Minecraft.
 
 - Pas de nouveau menu : ça se passe directement dans l'écran des succès (touche `L`).
 - Clique sur un succès à progression → la liste des éléments manquants s'affiche (biomes, monstres, aliments…), triée par ordre alphabétique, en deux colonnes (molette pour défiler).
